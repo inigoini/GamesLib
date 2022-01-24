@@ -46,5 +46,7 @@ from .tools import *
 from .app import *
 from .scene import *
 from .sprite import *
+from .score import *
+from .text import *
 
 print('GamesLib 1.0')

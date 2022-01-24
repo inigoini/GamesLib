@@ -1,14 +1,10 @@
 import pygame
 
-class Sprite(pygame.sprite.DirtySprite):
 
-	def __init__(self, source: pygame.Surface, pos: tuple=(0, 0), source_rect: tuple=None, frames: list=[], fps: int=12) -> None:
+class Image(pygame.sprite.DirtySprite):
+
+	def __init__(self, source: pygame.Surface, pos: tuple=(0, 0), source_rect: tuple=None) -> None:
 		pygame.sprite.DirtySprite.__init__(self)
-
-		for i in range(len(frames)):
-
-			if not isinstance(frames[i], pygame.Rect):
-				frames[i] = pygame.Rect(frames[i])
 
 		self.image = source
 
@@ -23,17 +19,8 @@ class Sprite(pygame.sprite.DirtySprite):
 		self.rect = pygame.Rect(pos, (w, h))
 		self.dirty = 1
 
-		self._frames = frames
-		self._frame = 0
-		self._loops = -1
-		self._fps = 1000 / fps if fps > 0 else 0
-		self._is_animated = False
-		self._delta = 0
-
 		self._speed_x = 0
 		self._speed_y = 0
-
-		self._on_animation_loop_stop = None
 
 	@property
 	def pos(self) -> tuple:
@@ -44,6 +31,32 @@ class Sprite(pygame.sprite.DirtySprite):
 	def size(self) -> tuple:
 		_, _, w, h = self.rect
 		return (w, h)
+
+	def update(self, delta: int, *args) -> None:
+
+		if self._speed_x != 0 or self._speed_y != 0:
+			self.rect.left += self._speed_x * delta
+			self.rect.top += self._speed_y * delta
+			self.dirty = 1
+
+class Sprite(Image):
+
+	def __init__(self, source: pygame.Surface, pos: tuple=(0, 0), source_rect: tuple=None, frames: list=[], fps: int=12) -> None:
+		Image.__init__(self, source, pos, source_rect)
+
+		for i in range(len(frames)):
+
+			if not isinstance(frames[i], pygame.Rect):
+				frames[i] = pygame.Rect(frames[i])
+
+		self._frames = frames
+		self._frame = 0
+		self._loops = -1
+		self._fps = 1000 / fps if fps > 0 else 0
+		self._is_animated = False
+		self._delta = 0
+
+		self._on_animation_loop_stop = None
 
 	def on_animation_loop_stop(self, func: callable) -> None:
 		self._on_animation_loop_stop = func
@@ -73,6 +86,7 @@ class Sprite(pygame.sprite.DirtySprite):
 		return self
 
 	def update(self, delta: int, *args) -> None:
+		Image.update(self, delta, *args)
 		
 		if self._is_animated and self._fps > 0:
 			self._delta += delta
@@ -91,11 +105,6 @@ class Sprite(pygame.sprite.DirtySprite):
 
 				self.source_rect = self._frames[self._frame]
 				self.dirty = 1
-
-		if self._speed_x != 0 or self._speed_y != 0:
-			self.rect.left += self._speed_x * delta
-			self.rect.top += self._speed_y * delta
-			self.dirty = 1
 
 class SpriteEx(Sprite):
 

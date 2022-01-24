@@ -19,6 +19,7 @@ def load_image(path: str, colorkey: gameslib.Color=None, scale: int=1):
 
 	else:
 		image.convert()
+		print(colorkey)
 		image.set_colorkey(colorkey)
 
 	return scale_image(image, scale)
@@ -32,14 +33,16 @@ def create_image(size: gameslib.Size, colorkey: gameslib.Color=None, bg_color: g
 		Width and height of the new image
 	colorkey: (int, int, int)
 		Transparent color. None by default
+	bg_color: (int, int, int) or (int, int, int, int)
+		color to fill the created image
 	scale: int
 		Scale ratio. Must be geather than 0, 1 by default (no scale)"""
 
 	if colorkey is None:
-		image = pygame.Surface(size, pygame.SRCALPHA)
+		image = pygame.Surface(size, pygame.SRCALPHA).convert_alpha()
 
 	else:
-		image = pygame.Surface(size)
+		image = pygame.Surface(size).convert()
 		image.set_colorkey(colorkey)
 
 	image.fill(bg_color)
@@ -88,3 +91,40 @@ def load_frames_info(path: str, file_name: str, scale: int=1):
 	source = load_image(source_path, scale=scale)
 
 	return source, frames
+
+def scale_pos(pos: gameslib.Pos, scale: int=1):
+	"""Scales a postion coordinates (x, y) using the given scale.
+
+	Parameters
+	----------
+	pos : (int, int)
+		Position to scale
+	scale: int
+		Scale ratio. Must be geather than 0, 1 by default (no scale)"""
+
+	if scale > 0:
+		x, y = pos
+		pos = (int(x * scale), int(y * scale))
+
+	return pos
+
+def scale_rects(rects: gameslib.Rects | pygame.Rect, scale: int=1):
+	"""Scales a rect (x, y, w, h) using the given scale.
+
+	Parameters
+	----------
+	rects : [(int, int, intm int)] or (int, int, intm int)
+		Rectangles or frames to scale
+	scale: int
+		Scale ratio. Must be geather than 0, 1 by default (no scale)"""
+
+	if scale > 0:
+
+		if not isinstance(rects, list):
+			rects = [rects]
+
+		for i in range(len(rects)):
+			x, y, w, h = rects[i]
+			rects[i] = int(x * scale), int(y * scale), int(w * scale), int(h * scale)
+
+	return rects

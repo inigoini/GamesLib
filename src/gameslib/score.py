@@ -1,20 +1,19 @@
-import pygame
+import pygame, gameslib
 
 class Score(pygame.sprite.DirtySprite):
 
-	def __init__(self, source: pygame.Surface, frames: list, pos: tuple=(0, 0), value: int=0, digits: int=2, leading_zeros: bool=True, scale: int = 1) -> None:
+	def __init__(self, source: pygame.Surface, pos: gameslib.Pos=(0, 0), value: int=0, digits: int=2, lead_zeros: bool=True, frames: gameslib.Rects=[], colorkey: gameslib.Color=None, bg_color: gameslib.Color=(0, 0, 0, 0), scale: int=1) -> None:
 		pygame.sprite.DirtySprite.__init__(self)
 
 		self._source = source
-		self._frames = frames
+		self._pos = pos
 		self._value = 0
 		self._digits = digits
-		self._leading_zeros = leading_zeros
+		self._lead_zeros = lead_zeros
+		self._frames = frames
+		self._colorkey = colorkey
+		self._bg_color = bg_color
 		self._scale = scale
-
-		self.image = source
-		_, _, w, h = source.get_rect()
-		self.rect = pygame.Rect(pos, (w, h))
 
 		self.value = value
 
@@ -24,36 +23,35 @@ class Score(pygame.sprite.DirtySprite):
 
 	@value.setter
 	def value(self, value:int) -> None:
+
+		if self._value == value:
+			return
+
 		self._value = value
 
-		frame_digits = []
-		score = str(value).zfill(self.digits) if self.leading_zeros else str(value)
-		for c in score:
+		w, h = 0, 0
+		str_value = str(value).zfill(self._digits) if self._lead_zeros else str(value)
+		rects = []
+		for c in str_value:
 			i = int(c)
-			frame_digits.append(self._frames[i])
-
-		w, h = 0
-		for frame in frame_digits:
-			_, _, fw, fh = frame
-			w += fw
+			_, _, fw, fh = self._frames[i]
+			rects.append(self._frames[i])
 
 			if fh > h:
 				h = fh
 
-		image = gameslib.create_image((w, h))
-		x = 0
-		for frame in frame_digits:
-			image.blit(self._source, (x, 0), frame)
-			_, _, fw, _ = frame
+			w += fw
+
+		x= 0
+		self.image = gameslib.create_image((w, h), self._colorkey, self._bg_color)
+		for rect in rects:
+			_, _, fw, _ = rect
+			self.image.blit(self._source, (x, 0), rect)
 			x += fw
 
-		self.image = image
-		self.rect = pygame.Rect(self._pos, (w, h))
+		self.image = gameslib.scale_image(self.image, self._scale)
+		self.rect = pygame.Rect(gameslib.scale_pos(self._pos, self._scale), self.image.get_size())
+		self.dirty = 1
 
-	@property
-	def digits(self) -> int:
-		return self._digits
 
-	@property
-	def leading_zeros(self) -> bool:
-		return self._leading_zeros
+
